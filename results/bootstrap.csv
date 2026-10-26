@@ -1,0 +1,13 @@
+column,a,b,rmse_a,rmse_b,diff_lo,diff_hi
+wind_h1,esn_connectome,esn_random,242.01,241.44,-1.03,2.14
+wind_h6,esn_connectome,esn_random,930.25,925.24,-0.48,10.91
+wind_h24,esn_connectome,esn_random,1528.05,1538.33,-19.22,-1.09
+pv_h1,esn_connectome,esn_random,300.65,295.3,2.39,8.32
+pv_h6,esn_connectome,esn_random,1128.27,1140.68,-21.13,-3.52
+pv_h24,esn_connectome,esn_random,1117.41,1114.42,-3.24,9.37
+wind_h1,esn_connectome,ridge_lags,242.01,257.4,-20.27,-10.57
+wind_h6,esn_connectome,ridge_lags,930.25,962.77,-53.29,-10.19
+wind_h24,esn_connectome,ridge_lags,1528.05,1536.07,-24.96,8.71
+pv_h1,esn_connectome,ridge_lags,300.65,357.93,-67.46,-47.17
+pv_h6,esn_connectome,ridge_lags,1128.27,1065.17,-1.87,128.39
+pv_h24,esn_connectome,ridge_lags,1117.41,1090.13,-0.42,56.15

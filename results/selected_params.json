@@ -1,0 +1,124 @@
+{
+  "esn": {
+    "connectome": {
+      "params": {
+        "rho": 1.1,
+        "leak": 1.0,
+        "input_scale": 0.1
+      },
+      "alpha": [
+        1e-09,
+        1e-06,
+        1.0,
+        1e-09,
+        1e-08,
+        1e-05
+      ],
+      "val_score": 0.6375337585856725
+    },
+    "random": {
+      "params": {
+        "rho": 0.5,
+        "leak": 1.0,
+        "input_scale": 0.05
+      },
+      "alpha": [
+        1e-10,
+        1e-07,
+        1.0,
+        1e-10,
+        1e-08,
+        1e-06
+      ],
+      "val_score": 0.6402448051345185
+    },
+    "shuffled": {
+      "params": {
+        "rho": 1.1,
+        "leak": 1.0,
+        "input_scale": 0.1
+      },
+      "alpha": [
+        1e-07,
+        0.0001,
+        10.0,
+        1e-08,
+        1e-05,
+        0.0001
+      ],
+      "val_score": 0.6386402211479846
+    },
+    "random_topology": {
+      "params": {
+        "rho": 0.5,
+        "leak": 1.0,
+        "input_scale": 0.05
+      },
+      "alpha": [
+        1e-10,
+        1e-07,
+        1.0,
+        1e-10,
+        1e-08,
+        1e-06
+      ],
+      "val_score": 0.6400123495234002
+    },
+    "topology_random_w": {
+      "params": {
+        "rho": 0.5,
+        "leak": 1.0,
+        "input_scale": 0.05
+      },
+      "alpha": [
+        1e-10,
+        1e-07,
+        1.0,
+        1e-10,
+        1e-08,
+        1e-07
+      ],
+      "val_score": 0.638135690281984
+    },
+    "degree_preserving": {
+      "params": {
+        "rho": 0.5,
+        "leak": 1.0,
+        "input_scale": 0.05
+      },
+      "alpha": [
+        1e-10,
+        1e-07,
+        1.0,
+        1e-10,
+        1e-08,
+        1e-07
+      ],
+      "val_score": 0.6366653534955654
+    },
+    "no_recurrence": {
+      "params": {
+        "rho": 1.1,
+        "leak": 0.6,
+        "input_scale": 0.5
+      },
+      "alpha": [
+        0.001,
+        0.001,
+        10.0,
+        0.0001,
+        0.001,
+        0.01
+      ],
+      "val_score": 0.6580611395162662
+    }
+  },
+  "ridge_lags_alpha": [
+    100.0,
+    0.01,
+    100.0,
+    1e-10,
+    1e-10,
+    1e-10
+  ]
+}
