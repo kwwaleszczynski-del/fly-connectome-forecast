@@ -38,8 +38,8 @@ STEPS = ("tune", "main", "matched", "curves", "noise")
 def load_hourly(data_dir: Path, today: date, offline: bool = False) -> pd.DataFrame:
     """Hourly MW frame (wind, pv, demand, wind_plan, pv_plan) up to two days after the end of the test period."""
     end = min(today - timedelta(days=1), (TEST_END + pd.Timedelta(days=2)).date())
-    mix = load_series("mix", HISTORY_START, end, data_dir / "pse", today=today, offline=offline)
-    plan = load_series("plan", HISTORY_START, end, data_dir / "pse", today=today, offline=offline)
+    mix = load_series("mix", HISTORY_START, end, data_dir / "pse", offline=offline)
+    plan = load_series("plan", HISTORY_START, end, data_dir / "pse", offline=offline)
     frame = hourly(mix).join(hourly(plan), how="left")
     frame = frame[frame.index < TEST_END + pd.Timedelta(days=2)]
     log.info("hourly frame %s .. %s, %d hours, missing wind %d, pv %d, plan %d", frame.index[0], frame.index[-1],

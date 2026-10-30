@@ -1,5 +1,8 @@
+from datetime import UTC, date, datetime
+
 import numpy as np
 import pandas as pd
+import pse_opendata
 import pytest
 
 from fly_forecast import baselines as bl
@@ -85,12 +88,32 @@ def test_bootstrap_interval():
     assert 0 < lo < 1 < hi < 1.5
 
 
-def test_pse_records_are_indexed_by_interval_start():
+class FakeResponse:
+    def __init__(self, payload):
+        self.status_code, self.headers, self.reason, self.payload = 200, {}, "OK", payload
+
+    def json(self):
+        return self.payload
+
+
+class FakeSession:
+    """Answers every pse-opendata request with the same records."""
+
+    def __init__(self, records: list[dict]):
+        self.records = records
+
+    def get(self, url, params=None, timeout=None, headers=None):
+        return FakeResponse({"value": self.records})
+
+
+def test_pse_records_are_indexed_by_interval_start(tmp_path):
     recs = [{"dtime_utc": f"2025-06-14 22:{m:02d}:00", "business_date": "2025-06-15", "demand": 1.0, "pv": 2.0,
              "wi": float(m)} for m in (15, 30, 45)]
     recs.append({"dtime_utc": "2025-06-14 23:00:00", "business_date": "2025-06-15", "demand": 1.0, "pv": 2.0,
                  "wi": 60.0})
-    df = pse.parse_records(recs, "mix")
+    client = pse_opendata.Client(session=FakeSession(recs), cache_dir=tmp_path, sleep=lambda s: None, min_interval=0,
+                                 retries=1, now=lambda: datetime(2025, 7, 1, tzinfo=UTC))
+    df = pse.load_series("mix", date(2025, 6, 15), date(2025, 6, 15), tmp_path, client=client)
     assert df.index[0] == pd.Timestamp("2025-06-14 22:00", tz="UTC")
     h = pse.hourly(df)
     assert len(h) == 1 and h["wind"].iloc[0] == pytest.approx(37.5)

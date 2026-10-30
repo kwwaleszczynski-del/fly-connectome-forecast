@@ -303,8 +303,10 @@ API `https://api.raporty.pse.pl/api`, no key:
 | `his-wlk-cal` ("Wielkości podstawowe") | `wi`, `pv`, `demand` | national wind and PV generation (units on and off the balancing market) and demand, MW, 15 min |
 | `pdgopkd` (day-ahead coordination plan, PKD) | `gen_wi`, `gen_fv` | planned wind and PV generation for day D, published on D-1, MW, 15 min |
 
-`dtime_utc` is the **end** of each 15-minute interval; the code converts it to the interval start and averages to
-hours. The data are cached as monthly Parquet files in `data/pse/`, not part of the repository.
+The data are read with [pse-opendata](https://pypi.org/project/pse-opendata/), which converts PSE's `dtime_utc`
+(the **end** of each 15-minute interval) to the interval start, pages through the API and caches monthly Parquet
+files in `data/pse/` (not part of the repository); a month is downloaded again until the revision window of its
+report has passed. The code averages the 15-minute values to hours.
 
 **Terms of use.** PSE publishes conditions for re-using public sector information
 ([www.pse.pl, BIP, "Ponowne wykorzystywanie informacji sektora publicznego"](https://www.pse.pl/bip/ponowne-wykorzystanie-informacji-publicznej)):
@@ -339,7 +341,7 @@ The repository contains no raw PSE data, only derived statistics in `results/` a
 python -m venv .venv
 .venv/Scripts/python -m pip install -e ".[dev]"      # Linux/macOS: .venv/bin/python
 
-python -m fly_forecast fetch                 # PSE series into data/pse (~5 MB)
+python -m fly_forecast fetch                 # PSE series into data/pse (~16 MB)
 python -m fly_forecast connectome            # FlyWire table (852 MB, once) -> connectome/ subgraphs
 python -m fly_forecast run --jobs 4          # experiments -> results/
 python -m fly_forecast report                # tables, docs/img/*.png, docs/index.html
@@ -350,7 +352,7 @@ pytest -q                                    # synthetic data, no network
 
 ```
 src/fly_forecast/
-  pse.py          PSE API client with monthly Parquet cache, hourly means
+  pse.py          PSE series through pse-opendata (monthly Parquet cache), hourly means
   connectome.py   FlyWire table -> signed, thresholded pair graph -> reservoir subgraphs
   reservoir.py    spectral scaling and the control reservoirs (random, shuffled, rewired, ...)
   esn.py          leaky ESN state update and ridge readout for many penalties at once
