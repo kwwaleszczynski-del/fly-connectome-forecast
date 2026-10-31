@@ -418,7 +418,30 @@ function draw(id, fig) {
     // on a phone the long names break before the setting and the weak-ridge note so they fit the width
     if (narrow) data = data.map(t => Object.assign({}, t, { name: t.name.replace(/, ([a-z]+-ESN setting|weak ridge)/g, "<br>$1") }));
   }
+  if (innerWidth < 760) lay = phone(lay, data, id !== "curves");
   Plotly.react(id, theme(data), baseLayout(lay), { responsive: true, displaylogo: false });
+}
+// narrow screens: legend above the plot, smaller ticks with automargin, slanted category labels,
+// panel titles broken over two lines
+function phone(lay, data, moveLegend) {
+  const l = Object.assign({}, lay);
+  const x0 = data.length && data[0].x ? data[0].x[0] : null;
+  const cat = typeof x0 === "string" && !/^[0-9]{4}-/.test(x0);
+  if (cat && !("xaxis" in l)) l.xaxis = {};
+  for (const k of Object.keys(l)) {
+    if (!/^[xy]axis[0-9]*$/.test(k)) continue;
+    const a = Object.assign({ automargin: true }, l[k]);
+    a.tickfont = Object.assign({ size: 10 }, a.tickfont);
+    if (a.title && a.title.text) {
+      const split = k.startsWith("x") && "xaxis2" in l;
+      a.title = Object.assign({}, a.title, { font: Object.assign({ size: 11 }, a.title.font),
+        text: split ? a.title.text.replace(/[- ]/, s => s === "-" ? "-<br>" : "<br>") : a.title.text });
+    }
+    if (k === "xaxis" && cat) a.tickangle = -45;
+    l[k] = a;
+  }
+  if (moveLegend) l.legend = Object.assign({}, l.legend, { orientation: "h", x: 0, xanchor: "left", y: 1.02, yanchor: "bottom", font: { size: 10 } });
+  return l;
 }
 function drawAll() {
   for (const id of ["network", "matrices", "spectra", "skill", "controls", "controls_random", "controls_connectome",
@@ -434,8 +457,10 @@ function drawForecast() {
     line: { color: m === "actual" ? css("--ink") : theme(D.colours[m]), width: m === "actual" ? 2 : 1.2, dash: m === "pse_plan" ? "dash" : "solid" },
     visible: ["actual", "esn_connectome", "esn_random", "ridge_lags", "pse_plan"].includes(m) ? true : "legendonly" }));
   const end = t.length > 24 * 14 ? t[24 * 14] : t[t.length - 1];
-  Plotly.react("forecast", data, baseLayout({ height: 430, xaxis: { range: [t[0], end], rangeslider: { visible: true } },
-    yaxis: { title: { text: "MW" } }, legend: { orientation: "h", y: -0.45 } }), { responsive: true, displaylogo: false });
+  const lay = { height: 430, margin: { l: 60, r: 32, t: 20, b: 50 },  // room for the last date tick
+    xaxis: { range: [t[0], end], rangeslider: { visible: true } },
+    yaxis: { title: { text: "MW" } }, legend: { orientation: "h", y: -0.45 } };
+  Plotly.react("forecast", data, baseLayout(innerWidth < 760 ? phone(lay, data, true) : lay), { responsive: true, displaylogo: false });
 }
 for (const id of ["curve_col", "noise_col", "fc_col"]) document.getElementById(id).addEventListener("change", drawAll);
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll);
