@@ -38,7 +38,7 @@ def _save(fig, path: Path) -> Path:
 
 def fig_reservoir(views: dict, path: Path) -> Path:
     fig = plt.figure(figsize=(12.5, 4.2))
-    gs = fig.add_gridspec(1, 4, width_ratios=[1.15, 1, 1, 1.05])
+    gs = fig.add_gridspec(1, 4, width_ratios=[1.15, 1, 1, 1])
     ax = fig.add_subplot(gs[0])
     pos, nodes, edges = views["pos"], views["nodes"], views["edges"]
     strong = edges.reindex(edges["weight"].abs().sort_values(ascending=False).index[:2500])
@@ -51,16 +51,22 @@ def fig_reservoir(views: dict, path: Path) -> Path:
             continue
         ax.scatter(pos[m, 0], pos[m, 1], s=size[m], c=colour, label=f"{nt} ({m.sum()})", zorder=2, lw=0)
     ax.set_title(f"{len(nodes)} most connected FlyWire neurons", fontsize=10)
-    ax.legend(loc="lower left", fontsize=8, markerscale=1.5)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.02), ncol=2, fontsize=8, markerscale=1.5, frameon=False)
     (x0, x1), (y0, y1) = view_limits(pos)
     ax.set_xlim(x0, x1), ax.set_ylim(y0, y1)
     ax.set_xticks([]), ax.set_yticks([]), ax.grid(False)
     for k, (v, title) in enumerate([("connectome", "connectome |W|"), ("degree_preserving", "degree-preserving"),
                                     ("random", "random (same density)")]):
         ax = fig.add_subplot(gs[k + 1])
-        ax.imshow(block_image(views["mats"][v], views["order"]), cmap="magma_r", interpolation="nearest")
+        im = ax.imshow(block_image(views["mats"][v], views["order"]), cmap="magma_r", interpolation="nearest")
         ax.set_title(title + "\n(rows: post, columns: pre)", fontsize=9.5)
         ax.set_xticks([]), ax.set_yticks([]), ax.grid(False)
+        # each panel keeps its own colour scale (the random matrix reaches about twice the connectome's values)
+        cb = fig.colorbar(im, ax=ax, orientation="horizontal", fraction=0.05, pad=0.03)
+        cb.ax.tick_params(labelsize=7.5)
+        cb.outline.set_visible(False)
+        if k == 0:
+            cb.set_label("log10(1 + summed |W| / smallest block)", fontsize=8)
     fig.suptitle("Reservoir matrices, neurons ordered by main neuropil", y=1.02)
     return _save(fig, path)
 
@@ -182,24 +188,28 @@ def fig_curves(res: dict, path: Path) -> Path:
              ("esn_random", "connectome", "--"), ("ridge_lags", "", "-"), ("gbm_lags", "", "-")]
     fig, axes = plt.subplots(2, 3, figsize=(12, 6.2), sharex=True)
     for ax, col in zip(axes.ravel(), COLS):
+        ref = res["base"].query("model == 'persistence'")
+        s, h = col.split("_h")
+        r0 = ref[(ref["target"] == s) & (ref["h"] == int(h))]["rmse"].iloc[0]
+        top = 2.2 * r0
         for m, setting, ls in lines:
             t = c[(c["model"] == m) & (c["column"] == col) & (c["setting"] == setting)]
             t = t.assign(x=t["days"].map(xs_map)).sort_values("x")
             lab = LABEL[m] + (f", {setting}-ESN setting" if setting else "")
             ax.plot(t["x"], t["test_median"], ls, marker="o", ms=3, color=COLOUR[m], label=lab, lw=1.3)
-        ref = res["base"].query("model == 'persistence'")
-        s, h = col.split("_h")
-        r0 = ref[(ref["target"] == s) & (ref["h"] == int(h))]["rmse"].iloc[0]
+            over = t[t["test_median"] > top]  # off the axis: marked on its top edge
+            ax.scatter(over["x"], [top] * len(over), marker="^", s=22, color=COLOUR[m], clip_on=False, zorder=3)
         ax.axhline(r0, color="#adb5bd", lw=1)
         ax.set_xscale("log")
         ax.set_title(col_label(col), fontsize=10)
-        ax.set_ylim(0, 2.2 * r0)
+        ax.set_ylim(0, top)
     for ax in axes[1]:
         ax.set_xlabel("training days before the test period")
     for ax in axes[:, 0]:
         ax.set_ylabel("test RMSE, MW (median of seeds)")
     axes[1, 2].legend(fontsize=7.5, ncol=3, loc="upper left", bbox_to_anchor=(-2.3, -0.2))
-    fig.suptitle("Learning curves, ridge penalty chosen inside each training window (grey: persistence)", y=1.0)
+    fig.suptitle("Learning curves, ridge penalty chosen inside each training window (grey: persistence)\n"
+                 "triangles on the top edge: errors above 2.2 x persistence", y=1.02)
     return _save(fig, path)
 
 
