@@ -112,6 +112,15 @@ The last one asks whether recurrence is needed at all: the readout then sees onl
 generation and demand (`his-wlk-cal`), and the PSE **day-ahead coordination plan** (`pdgopkd`, fields `gen_wi`,
 `gen_fv`), published on the day before delivery, mostly between 15:30 and 20:30 local time.
 
+**Timing.** Hour $`t`$ is the mean of the four quarter-hours in $`[t, t+1)`$ UTC (`pse.hourly`, intervals indexed by
+their start), so the input of hour $`t`$ is complete only at $`t+1`$, and the target at horizon $`h`$ is the mean of
+$`[t+h, t+h+1)`$. A "+1 h" forecast is therefore issued at the end of hour $`t`$ for the hour that starts then,
+and "+24 h" for the same hour a day later. No publication lag is modelled: PSE publishes a quarter-hour about
+35-40 minutes after it ends (37 minutes measured in
+[pl-forecast-bench](https://github.com/kwwaleszczynski-del/pl-forecast-bench) on 28 October 2026), so in real time
+a +1 h forecast would come about 40 minutes into its target hour. The lag is the same for every reservoir and
+baseline, so the comparisons stand; the absolute +1 h errors are optimistic for operational use.
+
 **Protocol.** Train from 20 June 2024 (after a one-week washout of the reservoir) to 31 March 2025, validation
 1 April to 30 September 2025, test 1 October 2025 to 30 September 2026 (8,760 target hours per task). Training rows
 never have a target beyond the end of their window. For each reservoir type the spectral radius
